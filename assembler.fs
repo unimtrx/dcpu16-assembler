@@ -7,6 +7,8 @@ variable depth
 \ where k * n = 64. This implementation considers
 \ n = 8 and k = 8.
 create resolve-array 0x40 cells allot
+\ Number and values of the 'next words'.
+create next-words 3 cells allot
 
 : @1-! ( addr -- ) dup @ 1- swap ! ;
 : @1+! ( addr -- ) dup @ 1+ swap ! ;
@@ -30,7 +32,12 @@ create resolve-array 0x40 cells allot
 : word, ( n -- ) update-block pc @1+! block-buffer @ w!
   block-buffer @ 0x2 + block-buffer ! ;
 
-: instruction ( -- addr ) block-buffer @ 0x0 word, ;
+: next-word! next-words @1+! next-words dup @ cells + ! ;
+: next-words, 0x0 next-words @
+  ?do next-words i cells + @ word, 0x1 -loop 0x0 next-words ! ;
+
+: instruction ( -- addr )
+  block-buffer @ 0x0 word, 0x0 next-words ! ;
 
 : depth@ ( -- n ) depth @ ;
 : depth+1! ( -- ) depth @ 0x8 ( k = 8 ) =
@@ -40,7 +47,6 @@ create resolve-array 0x40 cells allot
   ?do pc @ 1- i depth@ resolve@ w! loop depth @1-! ;
 
 : :assembly ( -- ) 0x0 pc ! -0x1 block-current ! update-block ;
-\ 0x0 block block-buffer ! ;
 : ;assembly ( -- ) update flush ;
 
 : :code ( -- addr addr )
@@ -50,12 +56,13 @@ create resolve-array 0x40 cells allot
 
 \ Could be done with CREATE-DOES>.
 : 'basic-opcode ( addr operand operand instruction -- addr )
-  swap 0xa lshift or swap 0x5 lshift or swap w! instruction ;
+  swap 0xa lshift or swap 0x5 lshift or swap w!
+  next-words, instruction ;
 : basic-opcode ( n -- ) >r : ['] lit compile,
   r> , ['] 'basic-opcode compile, postpone ; ;
 
 : 'special-opcode ( addr operand operand instruction -- addr )
-  swap 0xa lshift or swap w! instruction ;
+  swap 0xa lshift or swap w! next-words, instruction ;
 : special-opcode ( n -- ) 0x5 lshift >r : ['] lit compile,
   r> , ['] 'special-opcode compile, postpone ; ;
 
@@ -73,7 +80,7 @@ create resolve-array 0x40 cells allot
 0x18 constant %push
 0x18 constant %pop
 0x19 constant %peek
-: %pick word, 0x1a ;
+: %pick next-word! 0x1a ;
 
 0x01 basic-opcode set,
 0x02 basic-opcode add,
@@ -115,10 +122,10 @@ create resolve-array 0x40 cells allot
 
 \ Modifiers.
 : # ( n -- operand ) dup dup 0x0 0x1f within swap 0xffff = or
-    if 0x21 + else word, 0x1f then ;
+    if 0x21 + else next-word! 0x1f then ;
 : [%] ( reg -- operand ) 0x8 + ;
-: [#] ( n -- operand ) word, 0x1e ;
-: [%#] ( reg n -- operand ) word, 0x10 + ;
+: [#] ( n -- operand ) next-word! 0x1e ;
+: [%#] ( reg n -- operand ) next-word! 0x10 + ;
 
 \ Macros.
 : decr, 0x1 # sub, ;
