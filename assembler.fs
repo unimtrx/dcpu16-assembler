@@ -24,7 +24,8 @@ create resolve-array 0x40 cells allot
     block pc @ 0x400 mod 2* + block-buffer ! block-current !
   else drop then ;
 
-: update-buffer update-block block-current @ block pc @ 2* 0x400 mod + block-buffer ! ;
+: update-buffer update-block block-current @ block
+  pc @ 2* 0x400 mod + block-buffer ! ;
 
 : word, ( n -- ) update-block pc @1+! block-buffer @ w!
   block-buffer @ 0x2 + block-buffer ! ;
@@ -45,7 +46,7 @@ create resolve-array 0x40 cells allot
 : :code ( -- addr addr )
   pc @ constant instruction -0x1 depth ! ;
 : ;code ( addr -- )
-  pc @1-! block-buffer @ 0x2 - block-buffer ! ;
+  drop pc @1-! block-buffer @ 0x2 - block-buffer ! ;
 
 \ Could be done with CREATE-DOES>.
 : 'basic-opcode ( addr operand operand instruction -- addr )
