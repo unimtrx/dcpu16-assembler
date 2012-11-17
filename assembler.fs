@@ -72,7 +72,7 @@ create resolve-array 0x40 cells allot
 0x18 constant %push
 0x18 constant %pop
 0x19 constant %peek
-: pick word, 0x1a ;
+: %pick word, 0x1a ;
 
 0x01 basic-opcode set,
 0x02 basic-opcode add,
@@ -97,7 +97,6 @@ create resolve-array 0x40 cells allot
 0x15 basic-opcode ifa,
 0x16 basic-opcode ifl,
 0x17 basic-opcode ifu,
-0x16 basic-opcode ifg,
 0x1a basic-opcode adx,
 0x1b basic-opcode sbx,
 0x1e basic-opcode sti,
