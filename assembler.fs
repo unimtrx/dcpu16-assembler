@@ -181,5 +181,14 @@ create next-words 3 cells allot
 : *org pc ! update-buffer ;
 : *label pc @ constant ;
 : *dat word, ;
-: *ascii dup word, 0 ?do dup c@ word, 1+ loop ;
+\ Null-terminated string.
+: *ascii 0x0 ?do dup c@ word, 1+ loop 0x0 word, drop ;
+\ Pascal string.
+: *pascii dup word, 0x0 ?do dup c@ word, 1+ loop drop ;
+\ Compressed Pascal string (2 characters per word).
+\ Padding will be done with a space character.
+: *cpascii dup word, 0x2 2dup / -rot mod >r 2* over + dup >r 
+  swap ?do i c@ i 1+ c@ 0x8 lshift or word, 0x2 +loop r> r> 0x1
+  = if c@ [ ' lit compile, bl 0x8 lshift , ] or word,
+  else drop then ;
 
